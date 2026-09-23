@@ -1,0 +1,11 @@
+{
+  "name": "tic-solidario-juegos",
+  "version": "1.0.0",
+  "description": "Trivia y memotest del proyecto TIC Solidario (RSU - USAL Ingenieria)",
+  "private": true,
+  "scripts": {
+    "trivia": "node server.js",
+    "memotest": "node server-memo.js",
+    "test": "node test.js && node test-memo.js"
+  }
+}

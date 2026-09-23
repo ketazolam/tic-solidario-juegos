@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trivia TIC Solidario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#1e3a8a;
+    --bg2:#4c1d95;
+    --ink:#111827;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --brand:#4f46e5;
+    --brand-soft:#eef2ff;
+    --ok:#059669;
+    --ok-soft:#ecfdf5;
+    --warn:#b45309;
+    --warn-soft:#fffbeb;
+    --warn-line:#fcd34d;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    font-family:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:linear-gradient(140deg,var(--bg1),var(--bg2));
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px 16px;
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    transition:background 1.2s ease;
+  }
+  body.party{background:linear-gradient(140deg,#7c3aed,#db2777,#f59e0b);background-size:200% 200%;animation:shift 6s ease infinite}
+  @keyframes shift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+  /* capa de efectos */
+  #fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9}
+  .float{
+    position:fixed;font-size:2.2rem;pointer-events:none;z-index:8;
+    animation:fly 2.8s ease-out forwards;
+  }
+  @keyframes fly{
+    0%{opacity:0;transform:translateY(0) scale(.4) rotate(0)}
+    15%{opacity:1}
+    100%{opacity:0;transform:translateY(-70vh) scale(1.5) rotate(var(--spin,180deg))}
+  }
+
+  .card{
+    position:relative;z-index:10;
+    background:#fff;width:100%;max-width:640px;
+    border-radius:20px;padding:36px 34px 30px;
+    box-shadow:0 24px 60px rgba(0,0,0,.28);
+    animation:rise .35s cubic-bezier(.2,.8,.3,1);
+  }
+  .card.shake{animation:shake .5s cubic-bezier(.36,.07,.19,.97)}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes shake{
+    10%,90%{transform:translate3d(-2px,0,0)}
+    20%,80%{transform:translate3d(4px,0,0)}
+    30%,50%,70%{transform:translate3d(-7px,0,0)}
+    40%,60%{transform:translate3d(7px,0,0)}
+  }
+
+  .eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
+  h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em;margin-bottom:22px}
+
+  .meta{font-size:.85rem;font-weight:600;color:var(--muted);margin-bottom:8px}
+  .bar{height:7px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:28px}
+  .bar>i{display:block;height:100%;width:0;background:var(--brand);border-radius:99px;transition:width .35s ease}
+
+  .q{font-size:1.25rem;font-weight:600;line-height:1.4;margin-bottom:22px}
+  .opts{display:grid;gap:10px}
+  .opt{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;border:2px solid var(--line);border-radius:12px;
+    background:#fff;cursor:pointer;font:inherit;font-size:1rem;font-weight:500;
+    text-align:left;color:inherit;
+    transition:border-color .18s,background .18s,transform .12s;
+  }
+  .opt:hover{border-color:#c7d2fe;background:var(--brand-soft)}
+  .opt:active{transform:scale(.99)}
+  .opt .k{
+    flex:none;width:26px;height:26px;border-radius:7px;
+    background:var(--line);color:var(--muted);
+    display:grid;place-items:center;font-size:.8rem;font-weight:700;
+    transition:background .18s,color .18s;
+  }
+  .opt.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .opt.sel .k{background:var(--brand);color:#fff}
+
+  .btn{
+    margin-top:26px;width:100%;padding:14px;border:0;border-radius:12px;
+    background:var(--brand);color:#fff;font:inherit;font-size:1rem;font-weight:700;
+    cursor:pointer;transition:background .18s;
+  }
+  .btn:hover:not(:disabled){background:#4338ca}
+  .btn:disabled{background:#cbd5e1;cursor:not-allowed}
+
+  /* ---- resultado ---- */
+  .res{text-align:center;padding:6px 0}
+  .res .emoji{font-size:3.6rem;line-height:1;margin-bottom:14px;display:inline-block}
+  .res .emoji.dance{animation:dance 1.1s ease-in-out infinite}
+  @keyframes dance{
+    0%,100%{transform:rotate(-12deg) scale(1)}
+    50%{transform:rotate(12deg) scale(1.18)}
+  }
+  .res h2{font-size:1.5rem;font-weight:800;margin-bottom:16px}
+  .hits{font-size:1.15rem;font-weight:600;color:var(--muted);margin-bottom:6px}
+  .hits b{color:var(--ink);font-weight:800}
+
+  .panel{margin-top:22px;border-radius:14px;padding:26px 20px;text-align:center}
+  .panel.win{
+    background:var(--ok-soft);border:2px solid #a7f3d0;
+    animation:pop .6s cubic-bezier(.18,1.5,.5,1) both;
+  }
+  @keyframes pop{0%{opacity:0;transform:scale(.4)}60%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+  .panel.win .t{
+    color:var(--ok);font-size:2.6rem;font-weight:800;letter-spacing:.09em;line-height:1.1;
+    animation:throb 1s ease-in-out infinite;
+  }
+  @keyframes throb{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+  .panel.win .s{color:#047857;font-size:1rem;font-weight:500;margin-top:10px}
+
+  .panel.wait{background:var(--warn-soft);border:2px solid var(--warn-line)}
+  .panel.wait .t{color:var(--warn);font-size:1.3rem;font-weight:800;line-height:1.3}
+  .panel.wait .s{color:#92400e;font-size:.95rem;font-weight:500;margin-top:8px}
+  .clock{
+    margin-top:14px;font-size:2.4rem;font-weight:800;color:var(--warn);
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+
+  .link{
+    display:inline-block;margin-top:16px;background:none;border:0;
+    font:inherit;font-size:.82rem;font-weight:600;color:var(--muted);
+    text-decoration:underline;cursor:pointer;
+  }
+  .link:hover{color:var(--brand)}
+  .logos{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+    gap:18px 26px;margin-top:30px;padding-top:22px;border-top:1px solid var(--line);
+  }
+  .logos img{height:38px;width:auto;object-fit:contain;opacity:.85;transition:opacity .2s}
+  .logos img:hover{opacity:1}
+  .logos.vacia{display:none}
+  @media(max-width:480px){ .logos{gap:14px 18px} .logos img{height:28px} }
+  .hidden{display:none}
+
+  @media(max-width:480px){
+    .card{padding:28px 22px 24px;border-radius:16px}
+    h1{font-size:1.35rem}
+    .q{font-size:1.1rem}
+    .clock{font-size:2rem}
+    .panel.win .t{font-size:2rem}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="fx"></canvas>
+
+<div class="card" id="card">
+
+  <!-- ===== QUIZ ===== -->
+  <section id="quiz">
+    <div class="eyebrow">USAL · Responsabilidad Social Universitaria</div>
+    <h1>Trivia TIC Solidario</h1>
+    <p class="meta">Pregunta <b id="qNum">1</b> de <b id="qTot">10</b></p>
+    <div class="bar"><i id="barFill"></i></div>
+    <p class="q" id="qText"></p>
+    <div class="opts" id="opts"></div>
+  </section>
+
+  <!-- ===== RESULTADO ===== -->
+  <section id="result" class="res hidden">
+    <div class="emoji" id="resEmoji">🎉</div>
+    <h2>¡Terminaste la trivia!</h2>
+    <p class="hits">Acertaste <b>0/10</b> preguntas</p>
+
+    <div class="panel win hidden" id="panelWin">
+      <div class="t">GANASTE</div>
+      <div class="s">Acercate a la mesa a buscar tu premio.</div>
+    </div>
+
+    <div class="panel wait hidden" id="panelWait">
+      <div class="t">Volvé a intentar en 15 minutos</div>
+      <div class="s">Necesitás 6 respuestas correctas para ganar. ¡Dale otra vuelta!</div>
+      <div class="clock" id="clock">15:00</div>
+    </div>
+
+    <button class="btn hidden" id="again">Jugar de nuevo</button>
+    <button class="link hidden" id="reset">Soy otro participante — empezar de cero</button>
+  </section>
+
+  <footer class="logos" id="logos">
+    <img src="logos/usal.png" alt="Universidad del Salvador" onerror="this.remove()">
+    <img src="logos/ingenieria.svg" alt="Facultad de Ingeniería" onerror="this.remove()">
+    <img src="logos/voces-de-barro.png" alt="Voces de Barro" onerror="this.remove()">
+    <img src="logos/tic-solidario.png" alt="TIC Solidario" onerror="this.remove()">
+    <img src="logos/equidad.png" alt="Equidad" onerror="this.remove()">
+    <img src="logos/uniservitate.png" alt="Uniservitate" onerror="this.remove()">
+  </footer>
+
+</div>
+
+<script>
+/* ============ BANCO DE PREGUNTAS ============ */
+const QUESTIONS = [
+  { q:"¿A quiénes está dirigido el proyecto TIC Solidario?",
+    o:["A empresas de tecnología","A chicos","A universidades privadas","A asociaciones del Estado"], c:1 },
+
+  { q:"¿Cómo funciona el programa de TIC Solidario?",
+    o:["Necesita wifi todo el tiempo","Funciona sin conexión a internet","Necesita datos del celular","Necesita una suscripción mensual"], c:1 },
+
+  { q:"¿Qué tipo de contenido ofrece el programa?",
+    o:["Solamente juegos","Contenido educativo, recreativo y de lectura","Solamente videos de internet","Solamente planillas de cálculo"], c:1 },
+
+  { q:"¿Dónde se desarrolla el proyecto TIC Solidario?",
+    o:["En Ciudad de Buenos Aires","En Corrientes","En Mendoza","En Salta"], c:0 },
+
+  { q:"¿Qué computadoras reciben las escuelas del proyecto?",
+    o:["Equipos nuevos comprados de fábrica","Equipos reacondicionados: usados, reparados y puestos a punto","Equipos importados del exterior","No reciben computadoras"], c:1 },
+
+  { q:"¿Quiénes llevan adelante el proyecto TIC Solidario?",
+    o:["Estudiantes y docentes voluntarios de la universidad","Una empresa contratada","El Ministerio de Educación","Los propios alumnos de las escuelas"], c:0 },
+
+  { q:"¿Cuál es uno de los objetivos centrales del proyecto?",
+    o:["Vender software a las escuelas","Facilitar el acceso a medios digitales","Construir edificios escolares","Capacitar docentes universitarios"], c:1 },
+
+  { q:"¿A qué chicos llega el proyecto?",
+    o:["A chicos de nivel inicial","A chicos de primaria","A chicos de secundaria","A todos los anteriores"], c:3 },
+
+  { q:"¿Qué se necesita para participar del proyecto?",
+    o:["Pagar una cuota mensual","Tener internet en casa","Comprar las computadoras","Todas son incorrectas"], c:3 },
+
+  { q:"¿Desde qué facultad de la USAL se impulsa TIC Solidario?",
+    o:["Ciencias Económicas","Derecho","Ingeniería","Medicina"], c:2 }
+];
+
+const PASS        = 6;                  // aciertos necesarios para ganar
+const COOLDOWN_MS = 15 * 60 * 1000;     // 15 minutos
+const STORE_KEY   = "tic-trivia-lock";
+const KEYS = ["A","B","C","D"];
+
+const $ = id => document.getElementById(id);
+let idx = 0, score = 0, avanzando = false, ticker = null;
+
+/* ============ EFECTOS DE FIESTA (canvas, sin librerías) ============ */
+const cv = $("fx"), cx = cv.getContext("2d", { alpha: true });
+let parts = [], raf = null, timers = [];
+
+const COLORS = ["#f43f5e","#fb923c","#facc15","#4ade80","#38bdf8","#a78bfa","#f472b6","#ffffff"];
+const EMOTES = ["🎉","🎊","🥳","⭐","✨","💫","🏆","🙌","👏","🤩","🚀","💚"];
+const BOOKS  = ["📚","📖","📕","📗","📘","📙","📔","📓","💻","✏️"];
+
+let MAX  = 380;              // tope de partículas (se baja solo si el equipo sufre)
+let lento = 0;               // frames seguidos por encima del presupuesto
+
+/* --- sprites: cada emoji se dibuja UNA vez y después se copia (mucho más rápido
+       que fillText por partícula, que era lo que trababa la animación) --- */
+const sprites = new Map();
+function sprite(char, size){
+  const s = Math.max(16, Math.round(size / 8) * 8);      // tamaños cuantizados
+  const key = char + "|" + s;
+  let c = sprites.get(key);
+  if (!c){
+    c = document.createElement("canvas");
+    const lado = Math.ceil(s * 1.35);
+    c.width = c.height = lado;
+    const g = c.getContext("2d");
+    g.font = s + "px serif";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.fillText(char, lado/2, lado/2);
+    sprites.set(key, c);
+  }
+  return c;
+}
+
+function sizeCanvas(){
+  const d = Math.min(window.devicePixelRatio || 1, 1.5);  // capado: menos píxeles que pintar
+  cv.width  = Math.round(innerWidth  * d);
+  cv.height = Math.round(innerHeight * d);
+  cx.setTransform(d,0,0,d,0,0);
+}
+addEventListener("resize", sizeCanvas);
+sizeCanvas();
+
+function push(p){
+  if (parts.length < MAX) parts.push(p);
+  if (!raf) raf = requestAnimationFrame(loop);
+}
+
+/* papelitos disparados desde un punto */
+function burst(x, y, n, power, spread){
+  for (let i = 0; i < n; i++){
+    const a = (-Math.PI/2) + (Math.random()-.5) * spread;
+    const v = power * (.55 + Math.random()*.75);
+    push({
+      x, y, vx: Math.cos(a)*v, vy: Math.sin(a)*v,
+      g: .17, drag: .992,
+      w: 6 + Math.random()*7, h: 8 + Math.random()*10,
+      col: COLORS[(Math.random()*COLORS.length)|0],
+      rot: Math.random()*6.3, vr: (Math.random()-.5)*.35,
+      tilt: Math.random()*6.3, vt: .08 + Math.random()*.12,
+      life: 0, max: 520
+    });
+  }
+}
+
+/* papelitos cayendo desde arriba */
+function dropConfetti(n){
+  for (let i = 0; i < n; i++){
+    push({
+      x: Math.random()*innerWidth, y: -20,
+      vx: (Math.random()-.5)*2.5, vy: 1 + Math.random()*2.5,
+      g: .06, drag: 1,
+      w: 6+Math.random()*7, h: 8+Math.random()*10,
+      col: COLORS[(Math.random()*COLORS.length)|0],
+      rot: Math.random()*6.3, vr: (Math.random()-.5)*.3,
+      tilt: Math.random()*6.3, vt: .08+Math.random()*.12,
+      life: 0, max: 700
+    });
+  }
+}
+
+/* emojis cayendo, con balanceo tipo hoja */
+function dropEmoji(set, n, sizeMin, sizeMax, speed){
+  for (let i = 0; i < n; i++){
+    const char = set[(Math.random()*set.length)|0];
+    const size = sizeMin + Math.random()*(sizeMax-sizeMin);
+    push({
+      img: sprite(char, size),
+      x: Math.random()*innerWidth, y: -50,
+      vx: 0, vy: speed * (.7 + Math.random()*.8),
+      g: .012, drag: 1,
+      rot: (Math.random()-.5)*.6, vr: (Math.random()-.5)*.045,
+      sway: Math.random()*6.3, vs: .02 + Math.random()*.03,
+      amp: .7 + Math.random()*1.6,
+      life: 0, max: 900
+    });
+  }
+}
+
+/* emojis que suben y se desvanecen */
+function riseEmoji(set, n){
+  for (let i = 0; i < n; i++){
+    const char = set[(Math.random()*set.length)|0];
+    push({
+      img: sprite(char, 28 + Math.random()*22),
+      x: 20 + Math.random()*(innerWidth-40), y: innerHeight + 30,
+      vx: (Math.random()-.5)*1.2, vy: -(2.4 + Math.random()*2.2),
+      g: .014, drag: .995,
+      rot: (Math.random()-.5)*.5, vr: (Math.random()-.5)*.05,
+      sway: Math.random()*6.3, vs: .03, amp: .8,
+      life: 0, max: 300, fade: true
+    });
+  }
+}
+
+function loop(t){
+  const t0 = performance.now();
+  cx.clearRect(0, 0, innerWidth, innerHeight);
+
+  for (let i = parts.length - 1; i >= 0; i--){
+    const p = parts[i];
+    p.vy += p.g;
+    if (p.drag !== 1){ p.vx *= p.drag; p.vy *= p.drag; }
+    p.x += p.vx;
+    p.y += p.vy;
+    p.rot += p.vr;
+    p.life++;
+
+    if (p.vs){ p.sway += p.vs; p.x += Math.sin(p.sway) * p.amp; }
+
+    if (p.y > innerHeight + 70 || (p.vy < 0 && p.y < -70) || p.life > p.max){
+      parts.splice(i, 1);
+      continue;
+    }
+
+    const restan = p.max - p.life;
+    cx.globalAlpha = restan < 120 ? restan/120
+                   : (p.fade && p.life > 140 ? Math.max(0, 1-(p.life-140)/160) : 1);
+
+    cx.save();
+    cx.translate(p.x, p.y);
+    cx.rotate(p.rot);
+    if (p.img){
+      cx.drawImage(p.img, -p.img.width/2, -p.img.height/2);   // copia de sprite: barato
+    } else {
+      p.tilt += p.vt;
+      cx.scale(1, Math.cos(p.tilt));
+      cx.fillStyle = p.col;
+      cx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    }
+    cx.restore();
+  }
+  cx.globalAlpha = 1;
+
+  // si un frame tarda demasiado, recorto el tope y descarto lo más viejo
+  if (performance.now() - t0 > 12){
+    if (++lento > 6 && MAX > 140){
+      MAX = Math.max(140, (MAX * .75)|0);
+      if (parts.length > MAX) parts.splice(0, parts.length - MAX);
+      lento = 0;
+    }
+  } else if (lento > 0) lento--;
+
+  if (parts.length) raf = requestAnimationFrame(loop);
+  else { raf = null; cx.clearRect(0, 0, innerWidth, innerHeight); }
+}
+
+function every(ms, veces, fn){
+  let n = 0;
+  const t = setInterval(() => { fn(n); if (++n >= veces) clearInterval(t); }, ms);
+  timers.push(t);
+}
+
+function stopFX(){
+  timers.forEach(clearInterval); timers = [];
+  parts = [];
+  if (raf){ cancelAnimationFrame(raf); raf = null; }
+  cx.clearRect(0, 0, innerWidth, innerHeight);
+  document.body.classList.remove("party");
+}
+
+/* ---------- LA FIESTA ---------- */
+function party(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  // sprites listos antes de arrancar: así el primer frame no se traba
+  EMOTES.forEach(c => { sprite(c, 32); sprite(c, 40); });
+  BOOKS .forEach(c => { sprite(c, 40); sprite(c, 48); });
+
+  document.body.classList.add("party");
+  $("card").classList.add("shake");
+  timers.push(setTimeout(() => $("card").classList.remove("shake"), 600));
+
+  const W = innerWidth, H = innerHeight;
+
+  burst(0,   H,      60, 20, 1.0);
+  burst(W,   H,      60, 20, 1.0);
+  burst(W/2, H*0.45, 70, 15, Math.PI*2);
+  every(300, 3, i => burst(W*(.2 + i*.3), H*.6, 45, 16, Math.PI*1.4));
+
+  every(100, 65, () => dropConfetti(3));               // papelitos, ~6,5 s
+  every(180, 44, () => dropEmoji(EMOTES, 1, 28, 44, 1.6));  // emotes, ~8 s
+  every(240, 38, () => dropEmoji(BOOKS,  1, 36, 52, 1.2));  // libritos, ~9 s
+
+  riseEmoji(BOOKS, 6);
+  every(450, 13, () => riseEmoji(Math.random() < .5 ? BOOKS : EMOTES, 2));
+}
+
+/* ============ QUIZ ============ */
+function render(){
+  const item = QUESTIONS[idx];
+  $("qNum").textContent = idx + 1;
+  $("qTot").textContent = QUESTIONS.length;
+  $("barFill").style.width = (idx / QUESTIONS.length * 100) + "%";
+  $("qText").textContent = item.q;
+
+  $("opts").innerHTML = "";
+  item.o.forEach((text, i) => {
+    const b = document.createElement("button");
+    b.className = "opt";
+    b.type = "button";
+    b.innerHTML = '<span class="k">' + KEYS[i] + '</span><span>' + text + '</span>';
+    b.onclick = () => pick(i);
+    $("opts").appendChild(b);
+  });
+
+  avanzando = false;
+}
+
+function pick(i){
+  if (avanzando) return;                       // evita doble toque
+  avanzando = true;
+
+  const btns = [...$("opts").children];
+  btns.forEach((b, n) => { b.classList.toggle("sel", n === i); b.disabled = true; });
+
+  if (i === QUESTIONS[idx].c) score++;         // se cuenta en silencio
+
+  setTimeout(() => {                           // breve pausa para ver la eleccion
+    idx++;
+    avanzando = false;
+    if (idx < QUESTIONS.length) render();
+    else finish();
+  }, 260);
+}
+
+/* ============ RESULTADO ============ */
+function finish(){
+  $("quiz").classList.add("hidden");
+  $("result").classList.remove("hidden");
+  document.querySelector(".hits b").textContent = score + "/" + QUESTIONS.length;
+
+  const won = score >= PASS;
+  $("resEmoji").textContent = won ? "🏆" : "⏳";
+  $("resEmoji").classList.toggle("dance", won);
+  $("panelWin").classList.toggle("hidden", !won);
+  $("panelWait").classList.toggle("hidden", won);
+
+  if (won){
+    try { localStorage.removeItem(STORE_KEY); } catch(e){}
+    $("again").classList.remove("hidden");
+    $("reset").classList.add("hidden");
+    party();
+  } else {
+    const until = Date.now() + COOLDOWN_MS;
+    try { localStorage.setItem(STORE_KEY, String(until)); } catch(e){}
+    $("again").classList.add("hidden");
+    $("reset").classList.remove("hidden");
+    startClock(until);
+  }
+}
+
+/* ============ CUENTA REGRESIVA ============ */
+function startClock(until){
+  clearInterval(ticker);
+  const tick = () => {
+    const left = until - Date.now();
+    if (left <= 0){
+      clearInterval(ticker);
+      try { localStorage.removeItem(STORE_KEY); } catch(e){}
+      $("panelWait").classList.add("hidden");
+      $("again").classList.remove("hidden");
+      $("reset").classList.add("hidden");
+      return;
+    }
+    const m = Math.floor(left / 60000);
+    const s = Math.floor(left % 60000 / 1000);
+    $("clock").textContent = m + ":" + String(s).padStart(2, "0");
+  };
+  tick();
+  ticker = setInterval(tick, 1000);
+}
+
+/* ============ ARRANQUE / REINICIO ============ */
+function newGame(){
+  clearInterval(ticker);
+  stopFX();
+  idx = 0; score = 0; avanzando = false;
+  $("resEmoji").classList.remove("dance");
+  document.querySelector(".hits").classList.remove("hidden");
+  $("result").classList.add("hidden");
+  $("quiz").classList.remove("hidden");
+  render();
+}
+
+function boot(){
+  let until = 0;
+  try { until = Number(localStorage.getItem(STORE_KEY)) || 0; } catch(e){}
+  if (until > Date.now()){          // sigue bloqueado tras recargar
+    $("quiz").classList.add("hidden");
+    $("result").classList.remove("hidden");
+    $("resEmoji").textContent = "⏳";
+    document.querySelector(".hits").classList.add("hidden");
+    $("panelWait").classList.remove("hidden");
+    $("reset").classList.remove("hidden");
+    startClock(until);
+  } else {
+    newGame();
+  }
+}
+
+$("again").onclick = newGame;
+$("reset").onclick = () => {
+  try { localStorage.removeItem(STORE_KEY); } catch(e){}
+  newGame();
+};
+
+// la franja se oculta sola si todavia no hay logos en la carpeta
+addEventListener("load", () => {
+  const f = $("logos");
+  if (f && !f.querySelector("img")) f.classList.add("vacia");
+});
+
+boot();
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juegos TIC Solidario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:linear-gradient(140deg,#1e3a8a,#4c1d95);min-height:100vh;min-height:100dvh;
+    display:flex;align-items:center;justify-content:center;padding:24px 16px;color:#111827;
+  }
+  .card{background:#fff;width:100%;max-width:520px;border-radius:20px;padding:36px 28px;
+    box-shadow:0 24px 60px rgba(0,0,0,.28);text-align:center}
+  h1{font-size:1.8rem;font-weight:800;margin-bottom:6px}
+  p{color:#6b7280;margin-bottom:28px}
+  a{display:block;padding:20px;border-radius:14px;text-decoration:none;font-size:1.3rem;font-weight:700;
+    margin-bottom:14px;color:#fff;background:#4f46e5;transition:transform .15s}
+  a.memo{background:#059669}
+  a:active{transform:scale(.97)}
+  .logos{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;margin-top:22px}
+  .logos img{height:34px;width:auto}
+</style>
+</head>
+<body>
+  <main class="card">
+    <h1>TIC Solidario</h1>
+    <p>Elegí un juego</p>
+    <a href="trivia">🧠 Trivia</a>
+    <a href="memotest" class="memo">🃏 Memotest</a>
+    <div class="logos">
+      <img src="logos/usal.png" alt="Universidad del Salvador" onerror="this.remove()">
+      <img src="logos/ingenieria.svg" alt="Facultad de Ingeniería" onerror="this.remove()">
+      <img src="logos/tic-solidario.png" alt="TIC Solidario" onerror="this.remove()">
+    </div>
+  </main>
+</body>
+</html>
